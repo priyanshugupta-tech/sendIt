@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "This is a real time chat application",
   "main": "server.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
-    "dev": "tsc -p ./backend --watch",
-    "start": "nodemon ./backend/dist/server.js"
+    "start": "nodemon server.js"
   },
   "keywords": [
     "real time chat"
@@ -20,7 +19,6 @@
     "nodemon": "^3.1.14"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
-    "typescript": "^7.0.2"
+    "@types/express": "^5.0.6"
   }
 }
