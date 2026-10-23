@@ -1,0 +1,46 @@
+body {
+  background-color: #2bbbd7;
+  color: #757575;
+}
+
+.inputBox {
+  padding: 10px;
+  font-size: small;
+}
+
+input::placeholder {
+  font-size: small;
+}
+
+input::-webkit-file-upload-button {
+  all: unset;
+  background-color: #2bbbd7;
+  color: white;
+  padding: 5px;
+  margin-right: 5px;
+  border-radius: 5px;
+}
+
+input[type="file"] {
+  font-size: small;
+}
+
+input::selection {
+  background-color: #2bbbd7;
+  color: white;
+}
+
+.submitButton {
+  transform: translateY(0);
+  transition: transform 0.25s ease;
+}
+
+.submitButton:hover {
+  transform: translateY(-4px);
+}
+
+@media (max-width: 480px) {
+  .inputBox {
+    padding: 5px;
+  }
+}

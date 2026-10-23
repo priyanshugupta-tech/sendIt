@@ -1,0 +1,26 @@
+{
+  "name": "sendit",
+  "version": "1.0.0",
+  "description": "This is a real time chat application",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc -p ./backend --watch",
+    "start": "nodemon ./backend/dist/server.js"
+  },
+  "keywords": [
+    "real time chat"
+  ],
+  "author": "Priyanshu Gupta",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.9.3",
+    "nodemon": "^3.1.14"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "typescript": "^7.0.2"
+  }
+}
