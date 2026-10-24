@@ -18,6 +18,7 @@ connectDb(
   .then(() => console.log("Database connected!"))
   .catch((err) => console.log("Error Occured: ", err));
 
+app.use(express.json());
 app.use("/login", loginRouter);
 app.use("/signup", signupRouter);
 
