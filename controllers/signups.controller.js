@@ -1,11 +1,20 @@
 const { config } = require("../config/config");
-const jwt = require("jsonwebtoken");
 const { userModel } = require("../models/user.model");
 const bcrypt = require("bcrypt");
 
 async function handleSignup(req, res) {
   const { userName, email, password } = req.body;
 
+  if ((!userName, !email, !password)) {
+    return res.status(422).json({
+      message: "either of the detail is missing or invalidly entered!",
+    });
+  }
+  if (password.length < 8) {
+    return res.status(422).json({
+      message: "lenght of password is less than 8",
+    });
+  }
   const IsAlreadyRegistered = await userModel.findOne({
     $or: [{ userName }, { email }],
   });
@@ -18,22 +27,11 @@ async function handleSignup(req, res) {
 
   bcrypt.hash(password, 10, function (err, hash) {
     if (!err) {
-      userModel
-        .create({ email: email, password: hash, userName: userName })
-        .then((data) => {
-          const token = jwt.sign({ id: data._id }, config.secret, {
-            expiresIn: "1d",
-          });
-
-          res.status(201).json({
-            message: "user registered sucessfully!",
-            userData: data,
-            token: token,
-          });
-        })
-        .catch((err) => console.log("error in registration: ", err));
+      // create user with "verified: false"
+      // Send OPT to user's email to verify
     } else {
       console.log("error occured in hashing the password: ", err);
+      res.status(500).json({ message: "some internal error occured!" });
     }
   });
 }
