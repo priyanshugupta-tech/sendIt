@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const { config } = require("../config/config");
 const { userModel } = require("../models/user.model");
+const crypto = require("crypto");
+const { sessionModel } = require("../models/session.model");
 
 exports.handleTokengen = async function handleTokengen(req, res) {
   let refreshToken = req.cookies.refreshToken;
@@ -11,11 +13,25 @@ exports.handleTokengen = async function handleTokengen(req, res) {
     });
   }
 
+  const hashedRefreshToken = crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+
+  const session = await sessionModel.findOne({
+    refreshToken: hashedRefreshToken,
+  });
+  if (!session || session.revoked) {
+    return res.status(403).json({
+      message: "refreshToken is invalid or revoked!",
+    });
+  }
+
   const decoded = jwt.verify(refreshToken, config.secret);
 
   const user = await userModel.findById(decoded.id);
 
-  const accessToken = jwt.sign(
+  const newAccessToken = jwt.sign(
     {
       id: user._id,
       userName: user.userName,
@@ -26,7 +42,7 @@ exports.handleTokengen = async function handleTokengen(req, res) {
     },
   );
 
-  refreshToken = jwt.sign(
+  const newRefreshToken = jwt.sign(
     {
       id: user._id,
       userName: user.userName,
@@ -37,7 +53,23 @@ exports.handleTokengen = async function handleTokengen(req, res) {
     },
   );
 
-  res.cookie("refreshToken", refreshToken, {
+  try {
+    session = {
+      ...session,
+      refreshToken: crypto
+        .createHash("sha256")
+        .update(newRefreshToken)
+        .digest("hex"),
+    };
+    await session.save();
+  } catch (error) {
+    console.error("Error updating session:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+
+  res.cookie("refreshToken", newRefreshToken, {
     httpOnly: true,
     secure: true,
     sameSite: "strict",
@@ -46,6 +78,6 @@ exports.handleTokengen = async function handleTokengen(req, res) {
 
   return res.status(201).json({
     message: "tokens sucessfully restored!",
-    accessToken: accessToken,
+    accessToken: newAccessToken,
   });
 };

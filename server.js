@@ -11,6 +11,7 @@ const { tokengenRouter } = require("./routes/tokenRoutes");
 
 // Database
 const { connectDb } = require("./config/db.js");
+const { logoutRouter } = require("./routes/logoutRoutes.js");
 
 const app = express();
 
@@ -26,12 +27,16 @@ connectDb(
   .then(() => console.log("Database connected!"))
   .catch((err) => console.log("Error Occured: ", err));
 
+// plugins
 app.use(express.json());
-app.use("/login", loginRouter);
-app.use("/signup", signupRouter);
-app.use("/verify-otp", otpRouter);
-app.use("/newtoken", tokengenRouter);
 app.use(cookieParser());
+
+// auth routes
+app.use("/api/auth/login", loginRouter);
+app.use("/api/auth/signup", signupRouter);
+app.use("/api/auth/verify-otp", otpRouter);
+app.use("/api/auth/newtoken", tokengenRouter);
+app.use("/api/auth/logout", logoutRouter);
 
 app.listen(config.port, () =>
   console.log(`app started listening on PORT ${config.port}`),

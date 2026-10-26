@@ -1,7 +1,9 @@
 const { userModel } = require("../models/user.model");
+const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { jwt } = require("jsonwebtoken");
-const { use } = require("react");
+const { sessionModel } = require("../models/session.model");
+const { ref } = require("process");
 
 async function handleLogin(req, res) {
   const { userName, password } = req.body();
@@ -22,7 +24,13 @@ async function handleLogin(req, res) {
     });
   }
 
-  bcrypt.compare(password, user.password, (err, same) => {
+  if (!user.isVerified) {
+    return res.status(403).json({
+      message: "user is not verified!",
+    });
+  }
+
+  bcrypt.compare(password, user.password, async (err, same) => {
     if (!err) {
       if (same) {
         const refreshToken = jwt.sign(
@@ -32,6 +40,19 @@ async function handleLogin(req, res) {
         );
         const accessToken = jwt.sign({ refreshToken }, config.secret, {
           expiresIn: "15m",
+        });
+
+        const hashedRefreshToken = crypto
+          .createHash("sha256")
+          .update(refreshToken)
+          .digest("hex");
+
+        await sessionModel.create({
+          user: user._id,
+          ip: req.ip,
+          refreshToken: hashedRefreshToken,
+          userAgent: req.headers["user-agent"],
+          revoked: false,
         });
 
         res.cookie("refreshToken", refreshToken, {
