@@ -1,6 +1,8 @@
-const { config } = require("../config/config");
 const { userModel } = require("../models/user.model");
 const bcrypt = require("bcrypt");
+const { emailer } = require("../services/email.service");
+const { generateOtps } = require("../utils/generateOtp");
+const { otpModel } = require("../models/otp.model");
 
 async function handleSignup(req, res) {
   const { userName, email, password } = req.body;
@@ -27,10 +29,70 @@ async function handleSignup(req, res) {
         });
       }
 
-      bcrypt.hash(password, 10, function (err, hash) {
+      bcrypt.hash(password, 10, async function (err, hash) {
         if (!err) {
-          // create user with "verified: false"
-          // Send OPT to user's email to verify
+          /**
+           *Create User with verified: false*
+           */
+          userModel
+            .create({
+              email: email,
+              userName: userName,
+              password: hash,
+              isVerified: false,
+            })
+            .then((user) => {
+              const otp = generateOtps();
+              otpModel
+                .create({
+                  email: user.email,
+                  user: user._id,
+                  otpHash: crypto
+                    .createHash("sha256")
+                    .update(otp)
+                    .digest("hex"),
+                })
+                .then((otpSent) => {
+                  emailer(email, otp)
+                    .then(async ({ data, err }) => {
+                      if (err) {
+                        console.log(
+                          "some error occured at resend's end: ",
+                          err,
+                        );
+                        await userModel.findByIdAndDelete(user._id);
+                        await otpModel.findByIdAndDelete(otpSent._id);
+                        return res.status(502).json({
+                          message: "third-party service failure!",
+                        });
+                      } else {
+                        res.json(201).json({
+                          message: "signup successful!",
+                        });
+                      }
+                    })
+                    .catch(async (err) => {
+                      console.log("error occured in sending the email: ", err);
+                      await userModel.findByIdAndDelete(user._id);
+                      await otpModel.findByIdAndDelete(otpSent._id);
+                      return res.status(500).json({
+                        message: "internal server error",
+                      });
+                    });
+                })
+                .catch((err) => {
+                  console.log("some error occured: ", err);
+                  return res
+                    .status(500)
+                    .json({ message: "internal server error!" });
+                });
+            })
+            .catch(() => {
+              console.log("Error in creating user: ", err);
+              res.status(500).json({
+                message: "internal server error occured!",
+              });
+            });
         } else {
           console.log("error occured in hashing the password: ", err);
           return res

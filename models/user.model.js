@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+userSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 300, partialFilterExpression: { isVerified: false } },
+);
 const userModel = mongoose.model("User", userSchema);
 
 exports.userModel = userModel;
