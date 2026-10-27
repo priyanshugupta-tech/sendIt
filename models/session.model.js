@@ -22,11 +22,16 @@ const sessionSchema = new mongoose.Schema(
     },
     revoked: {
       type: Boolean,
-      required: [true, "revoke is required!"],
       default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true },
 );
+
+sessionSchema.index({ deletedAt: 1 }, { expireAfterSeconds: 86400 });
 
 exports.sessionModel = mongoose.model("Session", sessionSchema);
