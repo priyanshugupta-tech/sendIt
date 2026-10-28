@@ -40,9 +40,13 @@ async function handleLogin(req, res) {
               config.secret,
               { expiresIn: "7d" },
             );
-            const accessToken = jwt.sign({ refreshToken }, config.secret, {
-              expiresIn: "15m",
-            });
+            const accessToken = jwt.sign(
+              { id: user._id, userName: user.userName },
+              config.secret,
+              {
+                expiresIn: "15m",
+              },
+            );
 
             const hashedRefreshToken = crypto
               .createHash("sha256")
@@ -55,13 +59,15 @@ async function handleLogin(req, res) {
               refreshToken: hashedRefreshToken,
               userAgent: req.headers["user-agent"],
               revoked: false,
+              deletedAt: null,
             });
 
             res.cookie("refreshToken", refreshToken, {
               httpOnly: true,
               secure: true,
               sameSite: "strict",
-              maxAge: 7 * 24 * 60 * 60 * 1000,
+              maxAge: cookieExpiry,
+              path: "/api/auth/newtoken",
             });
 
             return res.status(200).json({ accessToken });

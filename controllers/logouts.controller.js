@@ -54,6 +54,11 @@ exports.logoutHandler = async function (req, res) {
       });
   } catch (err) {
     console.log("some error occured: ", err);
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "token expired, please login again!",
+      });
+    }
     return res.status(401).json({
       message: "you are not authenticated to logout!",
     });
@@ -98,6 +103,11 @@ exports.logoutAllHandler = async function (req, res) {
         });
       });
   } catch (err) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "token expired, please login again!",
+      });
+    }
     console.log("some error occured: ", err);
     return res.status(401).json({
       message: "you are not authenticated to logout!",

@@ -70,11 +70,12 @@ exports.handleTokengen = async function handleTokengen(req, res) {
       });
     }
 
-    res.cookie("refreshToken", newRefreshToken, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: cookieExpiry,
+      path: "/api/auth/newtoken",
     });
 
     return res.status(201).json({
@@ -83,6 +84,11 @@ exports.handleTokengen = async function handleTokengen(req, res) {
     });
   } catch (error) {
     console.log("some error occured: ", err);
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "token expired, please login again!",
+      });
+    }
     return res.status(401).json({
       message: "you are not authenticated!",
     });

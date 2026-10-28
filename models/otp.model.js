@@ -1,6 +1,10 @@
 const { mongoose } = require("mongoose");
 
 const otpSchema = new mongoose.Schema({
+  id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: [true, "id is required!"],
+  },
   email: {
     type: String,
     required: [true, "email is required!"],

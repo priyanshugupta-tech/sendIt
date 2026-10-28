@@ -20,12 +20,62 @@ async function handleSignup(req, res) {
 
     try {
       const IsAlreadyRegistered = await userModel.findOne({
-        $or: [{ userName }, { email }],
+        $and: [{ userName }, { email }],
       });
 
       if (IsAlreadyRegistered) {
-        return res.status(409).json({
-          message: "This username or email already exists",
+        if (!IsAlreadyRegistered.isVerified) {
+          /**
+           * create OTP save it to the DB send OTP
+           * *
+           */
+          const otp = generateOtps();
+          otpModel
+            .create({
+              id: IsAlreadyRegistered._id,
+              email: IsAlreadyRegistered.email,
+              user: IsAlreadyRegistered._id,
+              otpHash: crypto.createHash("sha256").update(otp).digest("hex"),
+            })
+            .then((otpSent) => {
+              emailer(email, otp)
+                .then(async ({ data, err }) => {
+                  if (err) {
+                    console.log("some error occured at resend's end: ", err);
+                    await userModel.findByIdAndDelete(user._id);
+                    await otpModel.findByIdAndDelete(otpSent._id);
+                    return res.status(502).json({
+                      message: "third-party service failure!",
+                    });
+                  } else {
+                    res.json(201).json({
+                      message: "signup successful!",
+                    });
+                  }
+                })
+                .catch(async (err) => {
+                  console.log("error occured in sending the email: ", err);
+                  await userModel.findByIdAndDelete(user._id);
+                  await otpModel.findByIdAndDelete(otpSent._id);
+                  return res.status(500).json({
+                    message: "internal server error",
+                  });
+                });
+            });
+        } else {
+          return res.status(409).json({
+            message: "user already exist!",
+          });
+        }
+      }
+
+      const somethingExists = await userModel.findOne({
+        $or: [{ userName }, { email }],
+      });
+
+      if (somethingExists) {
+        return res.json(409).status({
+          message: "some user with same userName or email already exists!",
         });
       }
 
@@ -45,6 +95,7 @@ async function handleSignup(req, res) {
               const otp = generateOtps();
               otpModel
                 .create({
+                  id: IsAlreadyRegistered._id,
                   email: user.email,
                   user: user._id,
                   otpHash: crypto
