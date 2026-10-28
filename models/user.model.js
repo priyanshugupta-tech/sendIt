@@ -23,13 +23,17 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    verificationExpiresAt: {
+      type: Date,
+      required: true,
+    },
   },
   { timestamps: true },
 );
 
 userSchema.index(
-  { createdAt: 1 },
-  { expireAfterSeconds: 300, partialFilterExpression: { isVerified: false } },
+  { verificationExpiresAt: 1 },
+  { expireAfterSeconds: 0, partialFilterExpression: { isVerified: false } },
 );
 const userModel = mongoose.model("User", userSchema);
 

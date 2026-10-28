@@ -22,7 +22,7 @@ const dnsServers = "8.8.8.8"
 dns.setServers(dnsServers);
 
 connectDb(
-  `mongodb+srv://priyanshuguptawebdev_db_user:${config.db_password}@cluster0.udpvgd2.mongodb.net/`,
+  `mongodb+srv://priyanshuguptawebdev_db_user:${config.db_password}@cluster0.udpvgd2.mongodb.net/sendItDb`,
 )
   .then(() => console.log("Database connected!"))
   .catch((err) => console.log("Error Occured: ", err));

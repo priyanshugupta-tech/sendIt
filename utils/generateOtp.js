@@ -1,7 +1,4 @@
 const { randomInt } = require("crypto");
 exports.generateOtps = function () {
-  return randomInt(1000000, 10000000, (err, n) => {
-    if (err) throw err;
-    else return n;
-  });
+  return randomInt(1000000, 10000000).toString(); //this is the issue and this is the only change that copilot did because...I could notice this and it was taking time and it instantly made the endpoint behave the way it was expected to behave
 };

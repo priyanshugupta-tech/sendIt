@@ -1,24 +1,23 @@
 const { mongoose } = require("mongoose");
 
-const otpSchema = new mongoose.Schema({
-  id: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: [true, "id is required!"],
+const otpSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: [true, "email is required!"],
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+      required: [true, "user is required!"],
+    },
+    otpHash: {
+      type: String,
+      required: [true, "otp is required!"],
+    },
   },
-  email: {
-    type: String,
-    required: [true, "email is required!"],
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "users",
-    required: [true, "user is required!"],
-  },
-  otpHash: {
-    type: String,
-    required: [true, "otp is required!"],
-  },
-});
+  { timestamps: true },
+);
 
 otpSchema.index({ createdAt: 1 }, { expireAfterSeconds: 300 });
 

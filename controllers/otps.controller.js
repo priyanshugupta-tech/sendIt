@@ -3,10 +3,11 @@ const { config } = require("../config/config");
 const { sessionModel } = require("../models/session.model");
 const { userModel } = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 async function handleOtp(req, res) {
   /**
-   * 1. get the OTP along with userName and email
+   * 1. get the OTP along with email
    * 2. Hash it using crypto module
    * 3. query into DB to find the OTP(s)
    * 4. Check and verify the OTP
@@ -16,71 +17,72 @@ async function handleOtp(req, res) {
    * *
    */
 
-  const { otp, userName, email } = req.body();
+  const { otp, email } = req.body;
 
-  if (!otp || !userName || !email) {
+  if (!otp || !email) {
     return res.status(400).json({
       messsage: "either of the OTP, userName or email is missing!",
     });
   }
 
-  const hash = crypto.createHash("sha256").update(otp).digest("hex");
+  const hash = crypto.createHash("sha256").update(String(otp)).digest("hex");
 
   userWithOtp = await otpModel
     .findOne({
-      otp: hash,
+      otpHash: hash,
       email: email,
     })
     .then(async (otp) => {
-      if (otp.userName === userName && otp.email === email) {
+      if (!otp) {
+        console.log("invalid otp or expired otp");
+        return res.status(401).json({
+          message: "invalid or expired otp!",
+        });
+      }
+      if (otp.email === email) {
         await userModel.updateOne(
-          { _id: otp.id },
+          { _id: otp.user },
           { $set: { isVerified: true } },
         );
-        const refreshToken = jwt.sign(
-          { id: otp.id, userName: otp.userName },
-          config.secret,
-          {
-            expiresIn: "7d",
-          },
-        );
+        const refreshToken = jwt.sign({ id: otp.user }, config.secret, {
+          expiresIn: "7d",
+        });
 
-        const accessToken = jwt.sign(
-          { id: otp.id, userName: otp.userName },
-          config.secret,
-          {
-            expiresIn: "15m",
-          },
+        const accessToken = jwt.sign({ id: otp.user }, config.secret, {
+          expiresIn: "15m",
+        });
 
-          sessionModel
-            .create({
-              user: otp.id,
-              ip: req.ip,
-              userAgent: req.headers["user-agent"],
-              refreshToken: refreshToken,
-              revoked: false,
-              deletedAt: null,
-            })
-            .then(() => {
-              res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "strict",
-                maxAge: cookieExpiry,
-                path: "/api/auth/refresh",
-              });
-              res.status(204).status({
-                accessToken: accessToken,
-                message: "verification successful!",
-              });
-            })
-            .catch((err) => {
-              console.log("some error occured: ", err);
-              res.status(500).json({
-                message: "some internal server error occured!",
-              });
-            }),
-        );
+        sessionModel
+          .create({
+            user: otp.user,
+            ip: req.ip,
+            userAgent: req.headers["user-agent"],
+            refreshToken: crypto
+              .createHash("sha256")
+              .update(refreshToken)
+              .digest("hex"),
+            revoked: false,
+            deletedAt: null,
+          })
+          .then(() => {
+            res.cookie("refreshToken", refreshToken, {
+              httpOnly: true,
+              secure: true,
+              sameSite: "strict",
+              maxAge: cookieExpiry,
+              path: "/api/auth/refresh",
+            });
+            res.status(201).json({
+              accessToken: accessToken,
+              message: "verification successful!",
+            });
+          })
+          .catch((err) => {
+            console.log("some error occured: ", err);
+            res.status(500).json({
+              message: "some internal server error occured!",
+            });
+          });
       }
     });
 }

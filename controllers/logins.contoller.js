@@ -1,12 +1,13 @@
 const { userModel } = require("../models/user.model");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
-const { jwt } = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const { sessionModel } = require("../models/session.model");
 const { ref } = require("process");
+const { config } = require("../config/config");
 
 async function handleLogin(req, res) {
-  const { userName, password } = req.body();
+  const { userName, password } = req.body;
 
   try {
     if (!userName || !password) {
@@ -35,18 +36,12 @@ async function handleLogin(req, res) {
       bcrypt.compare(password, user.password, async (err, same) => {
         if (!err) {
           if (same) {
-            const refreshToken = jwt.sign(
-              { id: user._id, userName: user.userName },
-              config.secret,
-              { expiresIn: "7d" },
-            );
-            const accessToken = jwt.sign(
-              { id: user._id, userName: user.userName },
-              config.secret,
-              {
-                expiresIn: "15m",
-              },
-            );
+            const refreshToken = jwt.sign({ id: user._id }, config.secret, {
+              expiresIn: "7d",
+            });
+            const accessToken = jwt.sign({ id: user._id }, config.secret, {
+              expiresIn: "15m",
+            });
 
             const hashedRefreshToken = crypto
               .createHash("sha256")
@@ -64,9 +59,9 @@ async function handleLogin(req, res) {
 
             res.cookie("refreshToken", refreshToken, {
               httpOnly: true,
-              secure: true,
+              // secure: true,
               sameSite: "strict",
-              maxAge: cookieExpiry,
+              maxAge: 7 * 24 * 60 * 60 * 1000,
               path: "/api/auth/newtoken",
             });
 
