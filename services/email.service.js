@@ -1,5 +1,5 @@
 const { Resend } = require("resend");
-const { config } = require("./config/config");
+const { config } = require("../config/config");
 
 const resend = new Resend(config.emailingKey);
 

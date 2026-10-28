@@ -8,15 +8,15 @@ const sessionSchema = new mongoose.Schema(
       required: [true, "user is required!"],
     },
     ip: {
-      type: string,
+      type: String,
       required: [true, "ip is required"],
     },
     userAgent: {
-      type: string,
+      type: String,
       required: [true, "userAgent is required!"],
     },
     refreshToken: {
-      type: string,
+      type: String,
       required: [true, "refresh token is required!"],
       unique: [true, "refresh token should be unique!"],
     },

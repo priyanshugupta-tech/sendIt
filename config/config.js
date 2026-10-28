@@ -1,6 +1,11 @@
 require("dotenv").config();
 
-if (!process.env.DB_PASSWORD || !process.env.JWT_SECRET || !process.env.PORT) {
+if (
+  !process.env.DB_PASSWORD ||
+  !process.env.JWT_SECRET ||
+  !process.env.PORT ||
+  !process.env.RESEND_API_KEY
+) {
   throw new Error("env_var does not exist in .env file");
 }
 
