@@ -60,7 +60,7 @@ exports.emailer = function (email, otp) {
                                 <!-- Footer Information -->
                                 <tr>
                                     <td style="padding-top: 16px; border-top: 1px solid #f3f4f6; font-size: 12px; color: #9ca3af; text-align: center; line-height: 18px;">
-                                    <p style="margin: 0 0 4px 0;">&copy; 2026 YourApp Inc. All rights reserved.</p>
+                                    <p style="margin: 0 0 4px 0;">&copy; 2026 sendIt Inc. All rights reserved.</p>
                                     <p style="margin: 0;">Automated message. Please do not reply directly to this mail.</p>
                                     </td>
                                 </tr>

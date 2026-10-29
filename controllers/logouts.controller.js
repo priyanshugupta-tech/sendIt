@@ -1,6 +1,6 @@
 const { sessionModel } = require("../models/session.model");
 const crypto = require("crypto");
-const { jwt } = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const { config } = require("../config/config");
 
 exports.logoutHandler = async function (req, res) {
@@ -13,54 +13,32 @@ exports.logoutHandler = async function (req, res) {
       });
     }
 
-    await sessionModel
-      .findOne({
-        refreshToken: crypto
-          .createHash("sha256")
-          .update(refreshToken)
-          .digest("hex"),
-      })
-      .then((session) => {
-        if (session || session.revoked === false) {
-          session = {
-            ...session,
-            revoke: true,
-            deletedAt: math.floor(Date.now() / 1000),
-          };
-          session
-            .save()
-            .then(() => {
-              res.clearCookie({
-                httpOnly: true,
-                secure: true,
-                sameSite: "strict",
-              });
+    const session = await sessionModel.findOne({
+      refreshToken: crypto
+        .createHash("sha256")
+        .update(refreshToken)
+        .digest("hex"),
+    });
 
-              return res.status(204).end();
-            })
-            .catch((err) => {
-              console.log("error revoking the seesion: ", err);
-              return res.status(500).json({
-                message: "internal server error!",
-              });
-            });
-        }
-      })
-      .catch((err) => {
-        console.log("error occured in database querying: ", err);
-        return res.status(500).json({
-          message: "internal server error!",
-        });
-      });
-  } catch (err) {
-    console.log("some error occured: ", err);
-    if (error.name === "TokenExpiredError") {
+    if (!session || session.revoked) {
       return res.status(401).json({
-        message: "token expired, please login again!",
+        message: "invalid or revoked refresh token!",
       });
     }
-    return res.status(401).json({
-      message: "you are not authenticated to logout!",
+
+    session.revoked = true;
+    session.deletedAt = new Date();
+    await session.save();
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "strict",
+    });
+    return res.status(204).end();
+  } catch (err) {
+    console.log("error revoking the session: ", err);
+    return res.status(500).json({
+      message: "internal server error!",
     });
   }
 };
@@ -76,39 +54,40 @@ exports.logoutAllHandler = async function (req, res) {
     }
 
     const decoded = jwt.verify(refreshToken, config.secret);
+    const hashedRefreshToken = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+    const session = await sessionModel.findOne({
+      user: decoded.id,
+      refreshToken: hashedRefreshToken,
+      revoked: false,
+    });
 
-    if (!decoded.revoke) {
+    if (!session) {
       return res.status(401).json({
         message: "you are not authenticated to logout!",
       });
     }
 
-    await sessionModel
-      .updateMany(
-        { _id: decoded.id, revoke: false },
-        { $set: { revoke: true, deletedAt: Math.floor(Date.now() / 1000) } },
-      )
-      .then(() => {
-        res.clearCookie("refreshToken", {
-          httpOnly: true,
-          sameSite: "strict",
-          secure: true,
-        });
-        return res.status(204).end();
-      })
-      .catch((err) => {
-        console.log("error occured in database querying and updating: ", err);
-        return res.status(500).json({
-          message: "internal server error!",
-        });
-      });
-  } catch (err) {
+    await sessionModel.updateMany(
+      { user: decoded.id, revoked: false },
+      { $set: { revoked: true, deletedAt: new Date() } },
+    );
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+    });
+    return res.status(204).end();
+  } catch (error) {
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         message: "token expired, please login again!",
       });
     }
-    console.log("some error occured: ", err);
+    console.log("some error occured: ", error);
     return res.status(401).json({
       message: "you are not authenticated to logout!",
     });

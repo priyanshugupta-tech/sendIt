@@ -34,7 +34,7 @@ const sessionSchema = new mongoose.Schema(
 
 sessionSchema.index(
   { deletedAt: 1 },
-  { expireAfterSeconds: 86400, partialFilterExpression: { revoke: true } },
+  { expireAfterSeconds: 86400, partialFilterExpression: { revoked: true } },
 );
 
 exports.sessionModel = mongoose.model("Session", sessionSchema);

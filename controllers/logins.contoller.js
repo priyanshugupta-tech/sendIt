@@ -34,50 +34,58 @@ async function handleLogin(req, res) {
       }
 
       bcrypt.compare(password, user.password, async (err, same) => {
-        if (!err) {
-          if (same) {
-            const refreshToken = jwt.sign({ id: user._id }, config.secret, {
-              expiresIn: "7d",
-            });
-            const accessToken = jwt.sign({ id: user._id }, config.secret, {
-              expiresIn: "15m",
-            });
-
-            const hashedRefreshToken = crypto
-              .createHash("sha256")
-              .update(refreshToken)
-              .digest("hex");
-
-            await sessionModel.create({
-              user: user._id,
-              ip: req.ip,
-              refreshToken: hashedRefreshToken,
-              userAgent: req.headers["user-agent"],
-              revoked: false,
-              deletedAt: null,
-            });
-
-            res.cookie("refreshToken", refreshToken, {
-              httpOnly: true,
-              // secure: true,
-              sameSite: "strict",
-              maxAge: 7 * 24 * 60 * 60 * 1000,
-              path: "/api/auth/newtoken",
-            });
-
-            return res.status(200).json({ accessToken });
-          } else {
-            return res.status(401).json({ message: "incorrect password!" });
-          }
-        } else {
+        if (err) {
           console.log("error occured in comparing the password: ", err);
+          return res
+            .status(500)
+            .json({ message: "some internal error occured!" });
+        }
+
+        if (!same) {
+          return res.status(401).json({ message: "incorrect password!" });
+        }
+
+        try {
+          const refreshToken = jwt.sign({ id: user._id }, config.secret, {
+            expiresIn: "7d",
+          });
+          const hashedRefreshToken = crypto
+            .createHash("sha256")
+            .update(refreshToken)
+            .digest("hex");
+
+          const session = await sessionModel.create({
+            user: user._id,
+            ip: req.ip,
+            refreshToken: hashedRefreshToken,
+            userAgent: req.headers["user-agent"],
+            revoked: false,
+            deletedAt: null,
+          });
+
+          const accessToken = jwt.sign(
+            { id: user._id, sid: session._id },
+            config.secret,
+            { expiresIn: "15m" },
+          );
+
+          res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            // secure: true,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+          });
+
+          return res.status(200).json({ accessToken });
+        } catch (error) {
+          console.log("error occured while creating login session: ", error);
           return res
             .status(500)
             .json({ message: "some internal error occured!" });
         }
       });
     } catch (error) {
-      console.log("some error occured: ", err);
+      console.log("some error occured: ", error);
       return res.status(500).json({
         message: "internal server error!",
       });

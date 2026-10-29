@@ -48,10 +48,6 @@ async function handleOtp(req, res) {
           expiresIn: "7d",
         });
 
-        const accessToken = jwt.sign({ id: otp.user }, config.secret, {
-          expiresIn: "15m",
-        });
-
         sessionModel
           .create({
             user: otp.user,
@@ -64,13 +60,18 @@ async function handleOtp(req, res) {
             revoked: false,
             deletedAt: null,
           })
-          .then(() => {
+          .then((session) => {
+            const accessToken = jwt.sign(
+              { id: otp.user, sid: session._id },
+              config.secret,
+              { expiresIn: "15m" },
+            );
+
             res.cookie("refreshToken", refreshToken, {
               httpOnly: true,
-              secure: true,
+              // secure: true,
               sameSite: "strict",
-              maxAge: cookieExpiry,
-              path: "/api/auth/refresh",
+              maxAge: 7 * 24 * 60 * 60 * 1000,
             });
             res.status(201).json({
               accessToken: accessToken,

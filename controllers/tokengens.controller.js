@@ -32,17 +32,6 @@ exports.handleTokengen = async function handleTokengen(req, res) {
 
     const user = await userModel.findById(decoded.id);
 
-    const newAccessToken = jwt.sign(
-      {
-        id: user._id,
-        userName: user.userName,
-      },
-      config.secret,
-      {
-        expiresIn: "15m",
-      },
-    );
-
     const newRefreshToken = jwt.sign(
       {
         id: user._id,
@@ -54,23 +43,25 @@ exports.handleTokengen = async function handleTokengen(req, res) {
       },
     );
 
-    try {
-      session = {
-        ...session,
-        refreshToken: crypto
-          .createHash("sha256")
-          .update(newRefreshToken)
-          .digest("hex"),
-      };
-      await session.save();
-    } catch (error) {
-      console.error("some error occured:", error);
-      return res.status(500).json({
-        message: "internal server error",
-      });
-    }
+    session.refreshToken = crypto
+      .createHash("sha256")
+      .update(newRefreshToken)
+      .digest("hex");
+    await session.save();
 
-    res.cookie("refreshToken", refreshToken, {
+    const newAccessToken = jwt.sign(
+      {
+        id: user._id,
+        userName: user.userName,
+        sid: session._id,
+      },
+      config.secret,
+      {
+        expiresIn: "15m",
+      },
+    );
+
+    res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       // secure: true,
       sameSite: "strict",
@@ -83,7 +74,7 @@ exports.handleTokengen = async function handleTokengen(req, res) {
       accessToken: newAccessToken,
     });
   } catch (error) {
-    console.log("some error occured: ", err);
+    console.log("some error occured: ", error);
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         message: "token expired, please login again!",
