@@ -2,8 +2,7 @@ const express = require("express");
 const { config } = require("./config/config.js");
 const dns = require("node:dns");
 const cookieParser = require("cookie-parser");
-const fs = require("fs");
-const { logger } = require("./services/logs.service.js");
+const logger = require("./services/logs.service.js");
 
 // Routes
 const { loginRouter } = require("./routes/loginRoutes");
