@@ -29,15 +29,16 @@ connectDb(
   .catch((err) => console.log("Error Occured: ", err));
 
 // logger
-app.use("/", (req, res, next) => {
-  const log = `userIP: ${req.ip} user-agent: ${req.headers["user-agent"]} request-timing: ${Date.now()}`;
-  fs.appendFile("logs.txt", `${log}\n`, "utf-8", (error) => {
-    if (error) {
-      return next(error);
-    }
-    console.log(log);
-    next();
+app.use((req, res, next) => {
+  // Log request structure natively as an object
+  logger.info("Incoming HTTP Request", {
+    ip: req.ip,
+    userAgent: req.headers["user-agent"],
+    method: req.method,
+    url: req.url,
+    timestamp: Date.now(),
   });
+  next();
 });
 
 // plugins
