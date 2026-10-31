@@ -2,7 +2,6 @@ const express = require("express");
 const { config } = require("./config/config.js");
 const dns = require("node:dns");
 const cookieParser = require("cookie-parser");
-const logger = require("./services/logs.service.js");
 
 // Routes
 const { loginRouter } = require("./routes/loginRoutes");
@@ -30,13 +29,13 @@ connectDb(
 
 // logger
 app.use((req, res, next) => {
-  // Log request structure natively as an object
-  logger.info("Incoming HTTP Request", {
+  console.log({
+    message: "Incoming HTTP Request",
     ip: req.ip,
     userAgent: req.headers["user-agent"],
     method: req.method,
     url: req.url,
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
   });
   next();
 });
