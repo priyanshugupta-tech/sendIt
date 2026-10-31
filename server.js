@@ -14,6 +14,7 @@ const { connectDb } = require("./config/db.js");
 const { logoutRouter } = require("./routes/logoutRoutes.js");
 
 const app = express();
+app.set("trust proxy", 1);
 
 const dnsServers = "8.8.8.8"
   .split(",")
