@@ -1,9 +1,9 @@
 // import React from "react";
 import { Box } from "@chakra-ui/react";
-import Multitabs from "./components/ui/Multitabs";
-import LogoComp from "./assets/logoComp.png";
+import Multitabs from "./ui/Multitabs";
+import LogoComp from "../assets/logoComp.png";
 
-function App() {
+function Auth() {
   return (
     <Box
       display="flex"
@@ -18,7 +18,7 @@ function App() {
       <Box
         p={{ base: "20px", sm: "30px", md: "40px" }}
         backgroundColor="white"
-        boxShadow="lg"
+        boxShadow="md"
         rounded="xl"
         w="100%"
         maxW={{ base: "100%", sm: "450px", md: "500px" }}
@@ -36,4 +36,4 @@ function App() {
   );
 }
 
-export default App;
+export default Auth;
