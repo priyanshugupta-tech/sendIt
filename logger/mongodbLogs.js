@@ -4,7 +4,7 @@ const { MongoClient } = require("mongodb");
 const { config } = require("../config/config");
 require("winston-mongodb");
 const { format } = require("winston");
-const { timestamp, label } = format;
+const { combine, timestamp, label, json } = format;
 
 async function mongodbLogs() {
   const url = `mongodb+srv://priyanshuguptawebdev_db_user:${config.db_password}@cluster0.udpvgd2.mongodb.net/sendItLogs`;
@@ -14,9 +14,10 @@ async function mongodbLogs() {
   const transport = new winston.transports.MongoDB({
     db: client,
     collection: "logs",
-    format: winston.format.json(
+    format: combine(
       label({ label: "productionLog" }),
       timestamp({ format: "HH:mm:ss" }),
+      json(),
     ),
   });
   transport.on("error", (error) => {
