@@ -4,7 +4,7 @@ const { MongoClient } = require("mongodb");
 const { config } = require("../config/config");
 require("winston-mongodb");
 const { format } = require("winston");
-const { combine, timestamp, label, json } = format;
+const { combine, uncolorize, timestamp, label, json } = format;
 
 async function mongodbLogs() {
   const url = `mongodb+srv://priyanshuguptawebdev_db_user:${config.db_password}@cluster0.udpvgd2.mongodb.net/sendItLogs`;
@@ -15,6 +15,7 @@ async function mongodbLogs() {
     db: client,
     collection: "logs",
     format: combine(
+      uncolorize(),
       label({ label: "productionLog" }),
       timestamp({ format: "HH:mm:ss" }),
       json(),
