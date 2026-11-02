@@ -1,21 +1,23 @@
 require("dotenv").config();
 
-if (
-  !process.env.DB_PASSWORD ||
-  !process.env.JWT_SECRET ||
-  !process.env.PORT ||
-  !process.env.RESEND_API_KEY ||
-  !process.env.NODE_ENV
-) {
-  throw new Error("env_var does not exist in .env file");
+const missingRequiredEnvVars = [
+  "DB_PASSWORD",
+  "JWT_SECRET",
+  "RESEND_API_KEY",
+].filter((key) => !process.env[key]);
+
+if (missingRequiredEnvVars.length > 0) {
+  throw new Error(
+    `Missing required env vars: ${missingRequiredEnvVars.join(", ")}`,
+  );
 }
 
 const config = {
-  port: process.env.PORT,
+  port: Number(process.env.PORT) || 5000,
   db_password: process.env.DB_PASSWORD,
   secret: process.env.JWT_SECRET,
   emailingKey: process.env.RESEND_API_KEY,
-  env: process.env.NODE_ENV,
+  env: process.env.NODE_ENV || "production",
 };
 
 exports.config = config;

@@ -54,7 +54,7 @@ async function startServer() {
   );
   logger.info("Database connected!");
 
-  app.listen(config.port, () =>
+  app.listen(config.port, "0.0.0.0", () =>
     logger.info(`app started listening on PORT ${config.port}`),
   );
 }
