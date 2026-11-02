@@ -3,6 +3,8 @@ const winston = require("winston");
 const { MongoClient } = require("mongodb");
 const { config } = require("../config/config");
 require("winston-mongodb");
+const { format } = require("winston");
+const { timestamp, label } = format;
 
 async function mongodbLogs() {
   const url = `mongodb+srv://priyanshuguptawebdev_db_user:${config.db_password}@cluster0.udpvgd2.mongodb.net/sendItLogs`;
