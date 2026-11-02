@@ -4,6 +4,7 @@ const { sessionModel } = require("../models/session.model");
 const { userModel } = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const logger = require("../logger/logger");
 
 async function handleOtp(req, res) {
   /**
@@ -34,7 +35,7 @@ async function handleOtp(req, res) {
     })
     .then(async (otp) => {
       if (!otp) {
-        console.log("invalid otp or expired otp");
+        logger.info("invalid otp or expired otp");
         return res.status(401).json({
           message: "invalid or expired otp!",
         });
@@ -79,7 +80,7 @@ async function handleOtp(req, res) {
             });
           })
           .catch((err) => {
-            console.log("some error occured: ", err);
+            logger.info("some error occured: ", err);
             res.status(500).json({
               message: "some internal server error occured!",
             });

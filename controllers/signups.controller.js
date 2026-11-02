@@ -4,6 +4,7 @@ const { emailer } = require("../services/email.service");
 const { generateOtps } = require("../utils/generateOtp");
 const { otpModel } = require("../models/otp.model");
 const crypto = require("crypto");
+const logger = require("../logger/logger");
 
 async function handleSignup(req, res) {
   const { userName, email, password } = req.body;
@@ -30,8 +31,8 @@ async function handleSignup(req, res) {
            * create OTP save it to the DB send OTP
            * *
            */
-           const otp = generateOtps();
-           return otpModel
+          const otp = generateOtps();
+          return otpModel
             .create({
               id: IsAlreadyRegistered._id,
               email: IsAlreadyRegistered.email,
@@ -42,7 +43,7 @@ async function handleSignup(req, res) {
               emailer(email, otp)
                 .then(async ({ err }) => {
                   if (err) {
-                    console.log("some error occured at resend's end: ", err);
+                    logger.info("some error occured at resend's end: ", err);
                     await otpModel.findByIdAndDelete(otpSent._id);
                     return res.status(502).json({
                       message: "third-party service failure!",
@@ -64,7 +65,7 @@ async function handleSignup(req, res) {
                   }
                 })
                 .catch(async (err) => {
-                  console.log("error occured in sending the email: ", err);
+                  logger.info("error occured in sending the email: ", err);
                   await otpModel.findByIdAndDelete(otpSent._id);
                   return res.status(500).json({
                     message: "internal server error",
@@ -116,7 +117,7 @@ async function handleSignup(req, res) {
                   emailer(email, otp)
                     .then(async ({ err }) => {
                       if (err) {
-                        console.log(
+                        logger.info(
                           "some error occured at resend's end: ",
                           err,
                         );
@@ -142,7 +143,7 @@ async function handleSignup(req, res) {
                       }
                     })
                     .catch(async (err) => {
-                      console.log("error occured in sending the email: ", err);
+                      logger.info("error occured in sending the email: ", err);
                       await userModel.findByIdAndDelete(user._id);
                       await otpModel.findByIdAndDelete(otpSent._id);
                       return res.status(500).json({
@@ -151,33 +152,33 @@ async function handleSignup(req, res) {
                     });
                 })
                 .catch((err) => {
-                  console.log("some error occured: ", err);
+                  logger.info("some error occured: ", err);
                   return res
                     .status(500)
                     .json({ message: "internal server error!" });
                 });
             })
             .catch((err) => {
-              console.log("Error in creating user: ", err);
+              logger.info("Error in creating user: ", err);
               res.status(500).json({
                 message: "internal server error occured!",
               });
             });
         } else {
-          console.log("error occured in hashing the password: ", err);
+          logger.info("error occured in hashing the password: ", err);
           return res
             .status(500)
             .json({ message: "some internal error occured!" });
         }
       });
     } catch (err) {
-      console.log("some error occured: ", err);
+      logger.info("some error occured: ", err);
       return res.status(500).json({
         message: "internal server error",
       });
     }
   } catch (err) {
-    console.log("some error occured: ", err);
+    logger.info("some error occured: ", err);
     return res.status(400).json({
       message: "one or more fields are missing!",
     });

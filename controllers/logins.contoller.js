@@ -3,8 +3,8 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { sessionModel } = require("../models/session.model");
-const { ref } = require("process");
 const { config } = require("../config/config");
+const logger = require("../logger/logger");
 
 async function handleLogin(req, res) {
   const { userName, password } = req.body;
@@ -35,7 +35,7 @@ async function handleLogin(req, res) {
 
       bcrypt.compare(password, user.password, async (err, same) => {
         if (err) {
-          console.log("error occured in comparing the password: ", err);
+          logger.info("error occured in comparing the password: ", err);
           return res
             .status(500)
             .json({ message: "some internal error occured!" });
@@ -71,27 +71,27 @@ async function handleLogin(req, res) {
 
           res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            // secure: true,
+            secure: true,
             sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000,
           });
 
           return res.status(200).json({ accessToken });
         } catch (error) {
-          console.log("error occured while creating login session: ", error);
+          logger.info("error occured while creating login session: ", error);
           return res
             .status(500)
             .json({ message: "some internal error occured!" });
         }
       });
     } catch (error) {
-      console.log("some error occured: ", error);
+      logger.info("some error occured: ", error);
       return res.status(500).json({
         message: "internal server error!",
       });
     }
   } catch (error) {
-    console.log("some error occured: ", err);
+    logger.info("some error occured: ", err);
     return res.status(400).json({
       message: "either of the userName or password is missing!",
     });

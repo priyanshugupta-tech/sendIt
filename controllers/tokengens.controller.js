@@ -3,6 +3,7 @@ const { config } = require("../config/config");
 const { userModel } = require("../models/user.model");
 const crypto = require("crypto");
 const { sessionModel } = require("../models/session.model");
+const logger = require("../logger/logger");
 
 exports.handleTokengen = async function handleTokengen(req, res) {
   try {
@@ -63,7 +64,7 @@ exports.handleTokengen = async function handleTokengen(req, res) {
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      // secure: true,
+      secure: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/api/auth/newtoken",
@@ -74,7 +75,7 @@ exports.handleTokengen = async function handleTokengen(req, res) {
       accessToken: newAccessToken,
     });
   } catch (error) {
-    console.log("some error occured: ", error);
+    logger.info("some error occured: ", error);
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         message: "token expired, please login again!",

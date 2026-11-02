@@ -2,6 +2,7 @@ const express = require("express");
 const { config } = require("./config/config.js");
 const dns = require("node:dns");
 const cookieParser = require("cookie-parser");
+const { logger, initializeLogger } = require("./logger");
 
 // Routes
 const { loginRouter } = require("./routes/loginRoutes");
@@ -22,15 +23,9 @@ const dnsServers = "8.8.8.8"
   .filter(Boolean);
 dns.setServers(dnsServers);
 
-connectDb(
-  `mongodb+srv://priyanshuguptawebdev_db_user:${config.db_password}@cluster0.udpvgd2.mongodb.net/sendItDb`,
-)
-  .then(() => console.log("Database connected!"))
-  .catch((err) => console.log("Error Occured: ", err));
-
 // logger
 app.use((req, res, next) => {
-  console.log({
+  logger.info({
     message: "Incoming HTTP Request",
     ip: req.ip,
     userAgent: req.headers["user-agent"],
@@ -52,6 +47,20 @@ app.use("/api/auth/verify-otp", otpRouter);
 app.use("/api/auth/newtoken", tokengenRouter);
 app.use("/api/auth/logout", logoutRouter);
 
-app.listen(config.port, () =>
-  console.log(`app started listening on PORT ${config.port}`),
-);
+async function startServer() {
+  await initializeLogger();
+  await connectDb(
+    `mongodb+srv://priyanshuguptawebdev_db_user:${config.db_password}@cluster0.udpvgd2.mongodb.net/sendItDb`,
+  );
+  logger.info("Database connected!");
+
+  app.listen(config.port, () =>
+    logger.info(`app started listening on PORT ${config.port}`),
+  );
+}
+
+startServer().catch((error) => {
+  console.error("Server startup failed:", error);
+  logger.close();
+  process.exitCode = 1;
+});

@@ -2,6 +2,7 @@ const { sessionModel } = require("../models/session.model");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { config } = require("../config/config");
+const logger = require("../logger/logger");
 
 exports.logoutHandler = async function (req, res) {
   try {
@@ -36,7 +37,7 @@ exports.logoutHandler = async function (req, res) {
     });
     return res.status(204).end();
   } catch (err) {
-    console.log("error revoking the session: ", err);
+    logger.info("error revoking the session: ", err);
     return res.status(500).json({
       message: "internal server error!",
     });
@@ -87,7 +88,7 @@ exports.logoutAllHandler = async function (req, res) {
         message: "token expired, please login again!",
       });
     }
-    console.log("some error occured: ", error);
+    logger.info("some error occured: ", error);
     return res.status(401).json({
       message: "you are not authenticated to logout!",
     });
