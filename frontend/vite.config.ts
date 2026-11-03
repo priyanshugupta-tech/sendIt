@@ -9,7 +9,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/chat/data": {
+      "/api": {
         target: "http://localhost:5000",
       },
     },
