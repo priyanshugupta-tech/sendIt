@@ -9,6 +9,7 @@ const { loginRouter } = require("./routes/loginRoutes");
 const { signupRouter } = require("./routes/signupRoutes");
 const { otpRouter } = require("./routes/otpRoutes");
 const { tokengenRouter } = require("./routes/tokenRoutes");
+const { userRouter } = require("./routes/userRoutes");
 
 // Database
 const { connectDb } = require("./config/db.js");
@@ -46,6 +47,7 @@ app.use("/api/auth/signup", signupRouter);
 app.use("/api/auth/verify-otp", otpRouter);
 app.use("/api/auth/newtoken", tokengenRouter);
 app.use("/api/auth/logout", logoutRouter);
+app.use("/api/auth/getuser", userRouter);
 
 async function startServer() {
   await initializeLogger();
