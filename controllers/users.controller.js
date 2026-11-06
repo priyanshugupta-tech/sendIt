@@ -27,6 +27,15 @@ async function handleUser(req, res) {
       });
   } catch (error) {
     logger.info("Some error occured: ", error);
+    if (
+      error.name === "TokenExpiredError" ||
+      error.name === "JsonWebTokenError" ||
+      error.name === "NotBeforeError"
+    ) {
+      return res.status(401).json({
+        message: "access token invalid or expired, please login again!",
+      });
+    }
     return res.status(500).json({
       message: "Some internal server error occured!",
     });

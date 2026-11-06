@@ -37,4 +37,12 @@ sessionSchema.index(
   { expireAfterSeconds: 86400, partialFilterExpression: { revoked: true } },
 );
 
+sessionSchema.index(
+  { updatedAt: 1 },
+  {
+    expireAfterSeconds: 10 * 24 * 60 * 60,
+    partialFilterExpression: { revoked: false },
+  },
+);
+
 exports.sessionModel = mongoose.model("Session", sessionSchema);

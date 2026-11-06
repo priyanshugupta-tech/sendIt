@@ -45,6 +45,14 @@ async function handleOtp(req, res) {
           { _id: otp.user },
           { $set: { isVerified: true } },
         );
+        const user = await userModel.findById(otp.user);
+
+        if (!user) {
+          return res.status(404).json({
+            message: "user not found!",
+          });
+        }
+
         const refreshToken = jwt.sign({ id: otp.user }, config.secret, {
           expiresIn: "7d",
         });
@@ -73,10 +81,12 @@ async function handleOtp(req, res) {
               // secure: true,
               sameSite: "strict",
               maxAge: 7 * 24 * 60 * 60 * 1000,
+              path: "/api/auth",
             });
             res.status(201).json({
               accessToken: accessToken,
               message: "verification successful!",
+              user: { userName: user.userName, email: user.email },
             });
           })
           .catch((err) => {

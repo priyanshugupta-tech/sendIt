@@ -15,7 +15,6 @@ type User = {
 function Dashboard() {
   const [loader, setLoader] = React.useState(true);
   const [redirectMsg, setRedirectMsg] = React.useState("");
-  const [accessToken, setAccessToken] = React.useState("");
   const isLoggedIn = useSelector(
     (state: RootState) => state.userState.isLoggedIn,
   );
@@ -39,7 +38,7 @@ function Dashboard() {
       .then((res: AxiosResponse<{ message: string; accessToken: string }>) => {
         if (res.status === 201) {
           // User is logged in; fetch chat data here when that request is implemented.
-          setAccessToken(res.data.accessToken);
+          const token = res.data.accessToken;
           axios
             .post<
               {
@@ -50,7 +49,7 @@ function Dashboard() {
               { accessToken: string }
             >(
               "/api/auth/getuser",
-              { accessToken: accessToken },
+              { accessToken: token },
               { signal: controller.signal },
             )
             .then((res: AxiosResponse<{ message: string; user: User }>) => {
@@ -59,7 +58,7 @@ function Dashboard() {
                   userName: res.data.user.userName,
                   isLoggedIn: true,
                   email: res.data.user.email,
-                  accessToken: accessToken,
+                  accessToken: token,
                 }),
               );
             })
@@ -70,19 +69,22 @@ function Dashboard() {
 
               setLoader(false);
 
-              if (err.response?.status === 401) {
-                const isExpired =
-                  err.response.data?.message ===
-                  "token expired, please login again!";
+              if (
+                err.response?.status === 401 ||
+                err.response?.status === 403 ||
+                err.response?.status === 404
+              ) {
                 setRedirectMsg(
-                  isExpired
-                    ? "Session expired, please login again!"
-                    : "You are not authenticated, please login first",
+                  err.response.data?.message ??
+                    "Your session is no longer valid. Please log in again.",
                 );
                 timeoutId = setTimeout(() => navigate("/auth"), 1000);
                 return;
               }
-              setRedirectMsg("Something went wrong. Please try again.");
+              setRedirectMsg(
+                err.response?.data?.message ??
+                  "Something went wrong. Please try again.",
+              );
             });
         }
         setLoader(false);
@@ -94,19 +96,22 @@ function Dashboard() {
 
         setLoader(false);
 
-        if (err.response?.status === 401) {
-          const isExpired =
-            err.response.data?.message === "token expired, please login again!";
+        if (
+          err.response?.status === 401 ||
+          err.response?.status === 403
+        ) {
           setRedirectMsg(
-            isExpired
-              ? "Session expired, please login again!"
-              : "You are not authenticated, please login first",
+            err.response.data?.message ??
+              "Your session is no longer valid. Please log in again.",
           );
           timeoutId = setTimeout(() => navigate("/auth"), 1000);
           return;
         }
 
-        setRedirectMsg("Something went wrong. Please try again.");
+        setRedirectMsg(
+          err.response?.data?.message ??
+            "Something went wrong. Please try again.",
+        );
       });
 
     return () => {

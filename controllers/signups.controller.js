@@ -138,7 +138,7 @@ async function handleSignup(req, res) {
                           },
                         );
                         return res.status(201).json({
-                          message: "signup successful!",
+                          message: "signup successfull!",
                         });
                       }
                     })

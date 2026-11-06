@@ -1,11 +1,26 @@
 import { useForm, Controller } from "react-hook-form";
 import { Box, Button, Field, PinInput, Stack } from "@chakra-ui/react";
+import axios from "axios";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { updateUserState } from "@/app/slices/userSlice";
 
 type formData = {
   pin: Array<string>;
 };
 
+type Outputs = {
+  messgae: string;
+  accessToken: string;
+  user: { userName: string; email: string };
+};
+
 function OTPForm() {
+  const [info, setInfo] = React.useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const {
     handleSubmit,
     control,
@@ -16,11 +31,32 @@ function OTPForm() {
     },
   });
 
-  const onSubmit = (data: formData) => {
+  const onSubmit = async (data: formData) => {
     /**
      * API call*
      */
-    console.log(data);
+    try {
+      const result = await axios.post<Outputs>(
+        "/api/auth/verify-otp",
+        data.toString(),
+      );
+
+      if (result.status === 201) {
+        const { user, accessToken } = result.data;
+        dispatch(
+          updateUserState({
+            userName: user.userName,
+            email: user.email,
+            isLoggedIn: true,
+            accessToken: accessToken,
+          }),
+        );
+        navigate("/", { replace: true });
+        return;
+      }
+      setInfo(result.data.messgae);
+      navigate("/auth", { replace: true });
+    } catch (error) {}
   };
 
   return (

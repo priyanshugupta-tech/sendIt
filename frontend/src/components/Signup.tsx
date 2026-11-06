@@ -1,31 +1,72 @@
-import { Box, Text, Button } from "@chakra-ui/react";
+import { Box, Text, Button, Spinner } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
 import { MdOutlineSupervisorAccount } from "react-icons/md";
+import axios, { AxiosError } from "axios";
+import { useNavigate } from "react-router-dom";
 
 type Inputs = {
   userName: string;
   email: string;
   password: string;
   confirmPassword: string;
-  image: FileList;
+  image?: FileList;
+};
+
+type Outputs = {
+  message: string;
+};
+
+type SignupError = {
+  message: string;
 };
 
 export default function Signup() {
+  const [info, setInfo] = React.useState("");
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<Inputs>();
-  const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    try {
+      const result = await axios.post<Outputs>("/api/auth/signup", data);
+      if (
+        result.status === 201 &&
+        result.data.message === "signup successfull!"
+      ) {
+        navigate("/otp", { replace: true });
+        return;
+      }
+
+      setInfo(result.data.message);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const err = error as AxiosError<SignupError>;
+        if (err.response) {
+          setInfo(err.response.data.message);
+        } else if (err.request) {
+          setInfo("Network error, request failed!");
+        } else {
+          setInfo("Something went wrong!");
+        }
+      }
+    }
+  };
 
   const [display, setDisplay] = React.useState<boolean>(false);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Box display="flex" flexDirection="column" minW="100%">
+        {info && (
+          <Text color="red" fontSize="sm" role="alert" marginBottom="10px">
+            {info}
+          </Text>
+        )}
         <Box display="flex" gap="4" marginBottom="10px">
           <Box display="flex" flexDirection="column" flex="1">
             <label htmlFor="userName">
@@ -178,15 +219,8 @@ export default function Signup() {
               backgroundColor: "#FAF9F6",
               border: "1px solid #F0EAD6",
             }}
-            {...register("image", { required: true })}
+            {...register("image")}
           />
-          {errors.image && (
-            <span>
-              <Text color="red" fontSize="2xs">
-                This field is required
-              </Text>
-            </span>
-          )}
         </Box>
 
         <button
@@ -205,9 +239,20 @@ export default function Signup() {
           }}
           type="submit"
           className="submitButton"
+          disabled={isSubmitting}
+          aria-live="polite"
         >
-          <MdOutlineSupervisorAccount color="white" size="20px" />
-          Sign up
+          {isSubmitting ? (
+            <>
+              <Spinner size="sm" />
+              Processing your request...
+            </>
+          ) : (
+            <>
+              <MdOutlineSupervisorAccount color="white" size="20px" />
+              Sign up
+            </>
+          )}
         </button>
       </Box>
     </form>

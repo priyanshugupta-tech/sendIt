@@ -12,7 +12,7 @@ const userStateSlice = createSlice({
     updateUserState: (state, action) => {
       state.isLoggedIn = action.payload.isLoggedIn;
       state.userName = action.payload.userName;
-      state.isLoggedIn = action.payload.email;
+      state.email = action.payload.email;
       state.accessToken = action.payload.accessToken;
     },
   },

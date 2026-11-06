@@ -67,7 +67,7 @@ exports.handleTokengen = async function handleTokengen(req, res) {
       secure: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/api/auth/newtoken",
+      path: "/api/auth",
     });
 
     return res.status(201).json({

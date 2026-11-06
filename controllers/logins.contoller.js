@@ -74,9 +74,14 @@ async function handleLogin(req, res) {
             secure: true,
             sameSite: "strict",
             maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: "/api/auth",
           });
 
-          return res.status(200).json({ accessToken });
+          return res.status(200).json({
+            message: "login successfull",
+            accessToken: accessToken,
+            user: { userName: user.userName, email: user.email },
+          });
         } catch (error) {
           logger.info("error occured while creating login session: ", error);
           return res
