@@ -3,6 +3,16 @@ const { config } = require("./config/config.js");
 const dns = require("node:dns");
 const cookieParser = require("cookie-parser");
 const { logger, initializeLogger } = require("./logger");
+const cors = require("cors");
+
+const app = express();
+
+const corsOptions = {
+  origin: "https://", // Be sure to update this!
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 
 // Routes
 const { loginRouter } = require("./routes/loginRoutes");
@@ -15,7 +25,6 @@ const { userRouter } = require("./routes/userRoutes");
 const { connectDb } = require("./config/db.js");
 const { logoutRouter } = require("./routes/logoutRoutes.js");
 
-const app = express();
 app.set("trust proxy", 1);
 
 const dnsServers = "8.8.8.8"
