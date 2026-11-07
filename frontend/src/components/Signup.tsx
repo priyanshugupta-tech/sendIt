@@ -29,16 +29,15 @@ export default function Signup() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
       const result = await axios.post<Outputs>("/api/auth/signup", data);
-      if (
-        result.status === 201 &&
-        result.data.message === "signup successfull!"
-      ) {
-        navigate("/otp", { replace: true });
+      if (result.status === 201) {
+        sessionStorage.setItem("sendItOtpEmail", data.email);
+        navigate("/otp", { replace: true, state: { email: data.email } });
         return;
       }
 
@@ -150,7 +149,10 @@ export default function Signup() {
                   backgroundColor: "#FAF9F6",
                   border: "1px solid #F0EAD6",
                 }}
-                {...register("password", { required: true })}
+                {...register("password", {
+                  required: true,
+                  deps: "confirmPassword",
+                })}
               />
               <Button
                 position="absolute"
@@ -179,6 +181,7 @@ export default function Signup() {
             <input
               id="confirmPassword"
               placeholder="Confirm Password"
+              type="password"
               className="inputBox"
               style={{
                 width: "100%",
@@ -189,12 +192,16 @@ export default function Signup() {
                 backgroundColor: "#FAF9F6",
                 border: "1px solid #F0EAD6",
               }}
-              {...register("confirmPassword", { required: true })}
+              {...register("confirmPassword", {
+                required: true,
+                validate: (value) =>
+                  value === getValues("password") || "Passwords do not match",
+              })}
             />
             {errors.confirmPassword && (
               <span>
                 <Text color="red" fontSize="2xs">
-                  This field is required
+                  {errors.confirmPassword.message}
                 </Text>
               </span>
             )}

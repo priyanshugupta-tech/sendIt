@@ -64,7 +64,7 @@ exports.handleTokengen = async function handleTokengen(req, res) {
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: config.env === "production",
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/api/auth",

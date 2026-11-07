@@ -7,96 +7,99 @@ const crypto = require("crypto");
 const logger = require("../logger/logger");
 
 async function handleOtp(req, res) {
-  /**
-   * 1. get the OTP along with email
-   * 2. Hash it using crypto module
-   * 3. query into DB to find the OTP(s)
-   * 4. Check and verify the OTP
-   * 5. Check weather the user is relevant to the OTP if yes then update isVerified to true
-   * 6. Create refresh token and Access token and also create a session
-   * 7. verification completed, successfully logged in
-   * *
-   */
-
   const { otp, email } = req.body;
 
   if (!otp || !email) {
     return res.status(400).json({
-      messsage: "either of the OTP, userName or email is missing!",
+      message: "OTP or email is missing!",
     });
   }
 
-  const hash = crypto.createHash("sha256").update(String(otp)).digest("hex");
-
-  userWithOtp = await otpModel
-    .findOne({
-      otpHash: hash,
-      email: email,
-    })
-    .then(async (otp) => {
-      if (!otp) {
-        logger.info("invalid otp or expired otp");
-        return res.status(401).json({
-          message: "invalid or expired otp!",
-        });
-      }
-      if (otp.email === email) {
-        await userModel.updateOne(
-          { _id: otp.user },
-          { $set: { isVerified: true } },
-        );
-        const user = await userModel.findById(otp.user);
-
-        if (!user) {
-          return res.status(404).json({
-            message: "user not found!",
-          });
-        }
-
-        const refreshToken = jwt.sign({ id: otp.user }, config.secret, {
-          expiresIn: "7d",
-        });
-
-        sessionModel
-          .create({
-            user: otp.user,
-            ip: req.ip,
-            userAgent: req.headers["user-agent"],
-            refreshToken: crypto
-              .createHash("sha256")
-              .update(refreshToken)
-              .digest("hex"),
-            revoked: false,
-            deletedAt: null,
-          })
-          .then((session) => {
-            const accessToken = jwt.sign(
-              { id: otp.user, sid: session._id },
-              config.secret,
-              { expiresIn: "15m" },
-            );
-
-            res.cookie("refreshToken", refreshToken, {
-              httpOnly: true,
-              // secure: true,
-              sameSite: "strict",
-              maxAge: 7 * 24 * 60 * 60 * 1000,
-              path: "/api/auth",
-            });
-            res.status(201).json({
-              accessToken: accessToken,
-              message: "verification successful!",
-              user: { userName: user.userName, email: user.email },
-            });
-          })
-          .catch((err) => {
-            logger.info("some error occured: ", err);
-            res.status(500).json({
-              message: "some internal server error occured!",
-            });
-          });
-      }
+  try {
+    const otpHash = crypto
+      .createHash("sha256")
+      .update(String(otp))
+      .digest("hex");
+    const otpRecord = await otpModel.findOneAndDelete({
+      otpHash,
+      email,
+      createdAt: { $gt: new Date(Date.now() - 5 * 60 * 1000) },
     });
+
+    if (!otpRecord) {
+      return res.status(401).json({
+        message: "invalid, expired, or already used OTP!",
+      });
+    }
+
+    const user = await userModel.findOne({
+      _id: otpRecord.user,
+      email,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "user not found!",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(409).json({
+        message: "account is already verified; please log in with your password.",
+      });
+    }
+
+    const verifiedUser = await userModel.findOneAndUpdate(
+      { _id: user._id, email, isVerified: false },
+      { $set: { isVerified: true } },
+      { new: true },
+    );
+
+    if (!verifiedUser) {
+      return res.status(409).json({
+        message: "account is already verified; please log in with your password.",
+      });
+    }
+
+    const refreshToken = jwt.sign({ id: verifiedUser._id }, config.secret, {
+      expiresIn: "7d",
+    });
+    const session = await sessionModel.create({
+      user: verifiedUser._id,
+      ip: req.ip,
+      userAgent: req.headers["user-agent"],
+      refreshToken: crypto
+        .createHash("sha256")
+        .update(refreshToken)
+        .digest("hex"),
+      revoked: false,
+      deletedAt: null,
+    });
+    const accessToken = jwt.sign(
+      { id: verifiedUser._id, sid: session._id },
+      config.secret,
+      { expiresIn: "15m" },
+    );
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: config.env === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/api/auth",
+    });
+
+    return res.status(201).json({
+      accessToken,
+      message: "verification successful!",
+      user: { userName: verifiedUser.userName, email: verifiedUser.email },
+    });
+  } catch (error) {
+    logger.info("error while verifying OTP: ", error);
+    return res.status(500).json({
+      message: "some internal server error occured!",
+    });
+  }
 }
 
 exports.handleOtp = handleOtp;

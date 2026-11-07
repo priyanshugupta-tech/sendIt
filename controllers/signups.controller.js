@@ -7,11 +7,16 @@ const crypto = require("crypto");
 const logger = require("../logger/logger");
 
 async function handleSignup(req, res) {
-  const { userName, email, password } = req.body;
+  const { userName, email, password, confirmPassword } = req.body;
   try {
-    if (!userName || !email || !password) {
+    if (!userName || !email || !password || !confirmPassword) {
       return res.status(422).json({
         message: "either of the detail is missing or invalidly entered!",
+      });
+    }
+    if (password !== confirmPassword) {
+      return res.status(422).json({
+        message: "passwords do not match!",
       });
     }
     if (password.length < 8) {
@@ -41,9 +46,9 @@ async function handleSignup(req, res) {
             })
             .then((otpSent) => {
               emailer(email, otp)
-                .then(async ({ err }) => {
-                  if (err) {
-                    logger.info("some error occured at resend's end: ", err);
+                .then(async ({ error }) => {
+                  if (error) {
+                    logger.info("some error occured at resend's end: ", error);
                     await otpModel.findByIdAndDelete(otpSent._id);
                     return res.status(502).json({
                       message: "third-party service failure!",
@@ -115,11 +120,11 @@ async function handleSignup(req, res) {
                 })
                 .then((otpSent) => {
                   emailer(email, otp)
-                    .then(async ({ err }) => {
-                      if (err) {
+                    .then(async ({ error }) => {
+                      if (error) {
                         logger.info(
                           "some error occured at resend's end: ",
-                          err,
+                          error,
                         );
                         await userModel.findByIdAndDelete(user._id);
                         await otpModel.findByIdAndDelete(otpSent._id);
