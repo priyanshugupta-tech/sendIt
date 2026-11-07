@@ -1,27 +1,31 @@
 import { createBrowserRouter } from "react-router-dom";
-import Auth from "../components/Auth";
-import Verification from "../components/Verification";
-import Dashboard from "../components/Dashboard";
-import Search from "@/components/Search";
 
 export const Router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard />,
+    lazy: async () => ({
+      Component: (await import("../components/Dashboard")).default,
+    }),
     children: [
       {
         path: "search",
-        element: <Search />,
+        lazy: async () => ({
+          Component: (await import("@/components/Search")).default,
+        }),
       },
       //anyother route needed
     ],
   },
   {
     path: "/auth",
-    element: <Auth />,
+    lazy: async () => ({
+      Component: (await import("../components/Auth")).default,
+    }),
   },
   {
     path: "/otp",
-    element: <Verification />,
+    lazy: async () => ({
+      Component: (await import("../components/Verification")).default,
+    }),
   },
 ]);
