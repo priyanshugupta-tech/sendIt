@@ -8,7 +8,7 @@ const cors = require("cors");
 const app = express();
 
 const corsOptions = {
-  origin: "https://", // Be sure to update this!
+  origin: "https://send-it-techyp.vercel.app/", // Be sure to update this!
   optionsSuccessStatus: 200,
 };
 
