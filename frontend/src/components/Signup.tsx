@@ -5,6 +5,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import React from "react";
 import { MdOutlineSupervisorAccount } from "react-icons/md";
 import axios, { AxiosError } from "axios";
+import { api } from "@/utils/api";
 import { useNavigate } from "react-router-dom";
 
 type Inputs = {
@@ -34,7 +35,7 @@ export default function Signup() {
   } = useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
-      const result = await axios.post<Outputs>("/api/auth/signup", data);
+      const result = await api.post<Outputs>("/api/auth/signup", data);
       if (result.status === 201) {
         sessionStorage.setItem("sendItOtpEmail", data.email);
         navigate("/otp", { replace: true, state: { email: data.email } });

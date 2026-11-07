@@ -97,10 +97,13 @@ SendIt is a real-time chat application. The current implementation includes a Re
 
    ```sh
    cd frontend
+   Copy-Item .env.example .env.local
    npm run dev
    ```
 
-   Open the local URL printed by Vite. Its development server proxies `/api` requests to `http://localhost:5000`.
+   Set `VITE_API_BASE_URL` in `frontend/.env.local` to your backend URL (for example, `https://your-backend.example.com`). The Vite development server calls this API directly; it does not proxy `/api` requests.
+
+   For Vercel, add `VITE_API_BASE_URL` with the deployed backend URL in the project's Environment Variables, then redeploy. Vite variables are included in browser code and are not secrets.
 
 ## Available scripts
 

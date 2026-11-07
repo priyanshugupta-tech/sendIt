@@ -5,6 +5,7 @@ import React from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { CiLogin } from "react-icons/ci";
 import axios from "axios";
+import { api } from "@/utils/api";
 import { useDispatch } from "react-redux";
 import { updateUserState } from "@/app/slices/userSlice";
 import { useNavigate } from "react-router-dom";
@@ -37,7 +38,7 @@ export default function Login() {
   } = useForm<Inputs>();
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
-      const result = await axios.post<Outputs>("api/auth/login", data);
+      const result = await api.post<Outputs>("/api/auth/login", data);
 
       if (result.status === 200) {
         const { accessToken, user } = result.data;

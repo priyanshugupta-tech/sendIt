@@ -1,6 +1,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { Box, Button, Field, PinInput, Stack, Text } from "@chakra-ui/react";
 import axios from "axios";
+import { api } from "@/utils/api";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -62,7 +63,7 @@ function OTPForm() {
      * API call*
      */
     try {
-      const result = await axios.post<Outputs>("/api/auth/verify-otp", {
+      const result = await api.post<Outputs>("/api/auth/verify-otp", {
         otp: data.pin.join(""),
         email,
       });

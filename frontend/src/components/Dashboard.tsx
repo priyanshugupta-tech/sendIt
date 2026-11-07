@@ -2,6 +2,7 @@ import type { RootState } from "@/app/store";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios, { type AxiosError, type AxiosResponse } from "axios";
+import { api } from "@/utils/api";
 import { useNavigate } from "react-router-dom";
 import { Box, Spinner, Text, VStack } from "@chakra-ui/react";
 import { updateUserState } from "@/app/slices/userSlice";
@@ -31,7 +32,7 @@ function Dashboard() {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const controller = new AbortController();
 
-    axios
+    api
       .get<{ message: string; accessToken: string }>("/api/auth/newtoken", {
         signal: controller.signal,
       })
@@ -39,7 +40,7 @@ function Dashboard() {
         if (res.status === 201) {
           // User is logged in; fetch chat data here when that request is implemented.
           const token = res.data.accessToken;
-          axios
+          api
             .post<
               {
                 message: string;

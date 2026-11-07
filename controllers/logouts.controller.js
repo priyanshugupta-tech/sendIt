@@ -33,7 +33,7 @@ exports.logoutHandler = async function (req, res) {
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: config.env === "production" ? "none" : "strict",
       secure: config.env === "production",
       path: "/api/auth",
     });
@@ -80,7 +80,7 @@ exports.logoutAllHandler = async function (req, res) {
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: config.env === "production" ? "none" : "strict",
       secure: config.env === "production",
       path: "/api/auth",
     });
