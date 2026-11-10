@@ -105,6 +105,8 @@ SendIt is a real-time chat application. The current implementation includes a Re
 
    For Vercel, add `VITE_API_BASE_URL` with the deployed backend URL in the project's Environment Variables, then redeploy. Vite variables are included in browser code and are not secrets.
 
+   The production frontend origin `https://sendit-tech.vercel.app` is included in the backend CORS allowlist in `server.js`. If the Vercel production domain changes, add its exact origin (scheme and hostname, without a trailing slash) to that allowlist and redeploy the backend.
+
 ## Available scripts
 
 Run these commands from the indicated directory:

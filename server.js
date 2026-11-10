@@ -10,6 +10,8 @@ const app = express();
 const corsOptions = {
   origin: [
     "https://send-it-techyp.vercel.app",
+    "https://send-it-orpin-eight.vercel.app",
+    "https://sendit-tech.vercel.app",
     "http://localhost:5173",
   ],
   credentials: true,
