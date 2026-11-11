@@ -7,18 +7,18 @@ const { config } = require("../config/config");
 const logger = require("../logger/logger");
 
 async function handleLogin(req, res) {
-  const { userName, password } = req.body;
+  const { userName, password, email } = req.body;
 
   try {
-    if (!userName || !password) {
+    if (!userName || !password || !email) {
       return res.status(400).json({
-        message: "invalid username or password",
+        message: "invalid username or password or email",
       });
     }
 
     try {
       const user = await userModel.findOne({
-        userName: userName,
+        $and: { userName: userName, email: email },
       });
 
       if (!user) {
