@@ -17,9 +17,7 @@ async function handleLogin(req, res) {
     }
 
     try {
-      const user = await userModel.findOne({
-        $and: { userName: userName, email: email },
-      });
+      const user = await userModel.findOne({ userName, email });
 
       if (!user) {
         return res.status(401).json({

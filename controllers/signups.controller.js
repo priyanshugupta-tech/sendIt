@@ -79,7 +79,7 @@ async function handleSignup(req, res) {
             });
         } else {
           return res.status(409).json({
-            message: "user already exist!",
+            message: "some user with same userName or email already exists!",
           });
         }
       }
